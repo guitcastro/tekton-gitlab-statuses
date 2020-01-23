@@ -1,6 +1,6 @@
 {
   "name": "tekton-gitlab-statuses",
-  "version": "0.0.1",
+  "version": "0.0.8",
   "description": "Send statuses update do gitlab based on tekton pipelines status",
   "bin": "index.js",
   "main": "index.js",

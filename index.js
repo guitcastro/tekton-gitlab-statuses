@@ -1,9 +1,13 @@
+#!/usr/bin/env node
+
 const k8s = require('@kubernetes/client-node');
 const request = require('request');
 
 const kc = new k8s.KubeConfig();
 const opts = {};
-kc.loadFromDefault();
+
+// kc.loadFromDefault();
+kc.loadFromCluster();
 kc.applyToRequest(opts);
 
 // argv[0] = node
@@ -33,7 +37,7 @@ console.log(`watching url: ${url}`)
 var lastStatus;
 
 poll(() => new Promise(() => 
-    request.get(url, opts,(_, ___, body) => {
+    request.get(url, opts,(_, response, body) => {
         const pipelinerun =  JSON.parse(body)
         const status = pipelinerun.status.conditions[0].reason.toLowerCase()
         console.log(status);
