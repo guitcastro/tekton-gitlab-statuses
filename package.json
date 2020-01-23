@@ -2,6 +2,7 @@
   "name": "tekton-gitlab-statuses",
   "version": "0.0.1",
   "description": "Send statuses update do gitlab based on tekton pipelines status",
+  "bin": "index.js",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
