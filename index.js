@@ -6,8 +6,8 @@ const request = require('request');
 const kc = new k8s.KubeConfig();
 const opts = {};
 
-kc.loadFromDefault();
-// kc.loadFromCluster();
+// kc.loadFromDefault();
+kc.loadFromCluster();
 kc.applyToRequest(opts);
 
 const argv = require('yargs')
