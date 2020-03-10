@@ -29,7 +29,6 @@ const argv = require('yargs')
     .epilog('copyright 2020')
     .argv;
 
-
 const pipelineRunSelfLinkName = argv.pipelineRunSelfLink
 const statusesUrl = argv.statusesUrl
 const targetUrl = argv.targetUrl
@@ -69,7 +68,7 @@ poll(() => new Promise(() =>
 ), 3000)
 
 function sendStatusToGitlab(status) {
-    const targetUrlQuery = typeof targetUrl !== 'undefined' ? `&target_url=${targetUrl}` : ''
+    const targetUrlQuery = typeof targetUrl !== 'undefined' ? `&target_url=${targetUrl}&name=tekton` : ''
     const gitlabUrl = `${statusesUrl}?state=${toGitlabStatus(status)}${targetUrlQuery}`
     console.log(`updating gitlab statuses: ${gitlabUrl}`)
     request.post(gitlabUrl, {
@@ -87,6 +86,7 @@ function sendStatusToGitlab(status) {
 function toGitlabStatus(status) {
     switch (status) {
         case 'succeeded':
+        case 'completed':            
             return 'success';
         case 'failed':
             return 'failed'
@@ -95,4 +95,5 @@ function toGitlabStatus(status) {
         case 'running':
             return 'running' 
     }
+    console.log(`unable to converter to GitlabStatus: ${status}`)
 }
