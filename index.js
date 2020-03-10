@@ -45,9 +45,15 @@ console.log(`watching url: ${url}`)
 var lastStatus;
 
 poll(() => new Promise(() => 
-    request.get(url, opts,(_, response, body) => {
+    request.get(url, opts,(err, response, body) => {
         const pipelinerun =  JSON.parse(body)
-        const status = pipelinerun.status.conditions[0].reason.toLowerCase()
+
+        if (err) {
+            return console.error('fetch pipeline failed:', err);
+        }
+        
+        const conditions = pipelinerun.status.conditions
+        const status = conditions[0].reason.toLowerCase()
         console.log(status);
         if (status != lastStatus) {
             sendStatusToGitlab(status)
