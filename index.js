@@ -6,27 +6,35 @@ const request = require('request');
 const kc = new k8s.KubeConfig();
 const opts = {};
 
-// kc.loadFromDefault();
-kc.loadFromCluster();
+kc.loadFromDefault();
+// kc.loadFromCluster();
 kc.applyToRequest(opts);
 
-// argv[0] = node
-// argv[1] = index.js
+const argv = require('yargs')
+    .usage('Usage: $0 -p [pipelineRunSelfLink] --statusesUrl [statusesUrl] -t [gitlabToken] [options]')
+    .example('tekton-gitlab-statuses \\\n' +
+        '-p apis/tekton.dev/v1beta1/namespaces/cicd/pipelineruns/build-blu-api-tekton-update-znrqz \\\n' +
+        '--statusesUrl https://gitlab.com/api/v4/projects/8739183/statuses/7aa3f77676859388b04be73c3fa325bf96541be0 \\\n' +
+        '-t gitlabtoken')
+    .alias('p', 'pipelineRunSelfLink')
+    .alias('t', 'token')
+    .describe('p', 'The link for the pipeline run resourece, ex:apis/tekton.dev/v1beta1/namespaces/[namespace]/pipelineruns/[resourcename]')
+    .describe('statusesUrl', 'https://gitlab.com/api/v4/projects/[projectId]]/statuses/[commit]')
+    .describe('t', 'The gitlab token to authenticate the request')
+    .describe('targetUrl', 'The target url to see the build, ex:https://tekton.mydomain.com/#/namespaces/cicd/pipelineruns/[pipelinerun]')
+    .demandOption(['p','statusesUrl', 'token'])
+    .help('h')
+    .alias('h', 'help')
+    .epilog('copyright 2020')
+    .argv;
 
-// argv[2] = namespace
-const namespace = process.argv[2]
-// argv[3] = pipeline-run
-const pipelinerunName = process.argv[3]
 
-// argv[4] = commit
-const commit = process.argv[4]
-// argv[5] = gitlab project id
-const projectId = process.argv[5]
-// argv[6] = gitlab secret
-const gitlabToken = process.argv[6]
+const pipelineRunSelfLinkName = argv.pipelineRunSelfLink
+const statusesUrl = argv.statusesUrl
+const targetUrl = argv.targetUrl
+const gitlabToken = argv.token
 
-const endpoint = `apis/tekton.dev/v1alpha1/namespaces/${namespace}/pipelineruns`
-const url = `${kc.getCurrentCluster().server}/${endpoint}/${pipelinerunName}`
+const url = `${kc.getCurrentCluster().server}/${pipelineRunSelfLinkName}`
 
 const sleep = time => new Promise(resolve => setTimeout(resolve, time))
 const poll = (promiseFn, time) => promiseFn().then(
@@ -49,7 +57,8 @@ poll(() => new Promise(() =>
 ), 3000)
 
 function sendStatusToGitlab(status) {
-    const gitlabUrl = `https://gitlab.com/api/v4/projects/${projectId}/statuses/${commit}?state=${toGitlabStatus(status)}`
+    const targetUrlQuery = typeof targetUrl !== 'undefined' ? `&target_url=${targetUrl}` : ''
+    const gitlabUrl = `${statusesUrl}?state=${toGitlabStatus(status)}${targetUrlQuery}`
     console.log(`updating gitlab statuses: ${gitlabUrl}`)
     request.post(gitlabUrl, {
         headers: {
