@@ -2,6 +2,7 @@
 
 const k8s = require('@kubernetes/client-node');
 const request = require('request');
+const version = require('./package.json').version;
 
 const kc = new k8s.KubeConfig();
 const opts = {};
@@ -40,7 +41,7 @@ const sleep = time => new Promise(resolve => setTimeout(resolve, time))
 const poll = (promiseFn, time) => promiseFn().then(
              sleep(time).then(() => poll(promiseFn, time)))
 
-console.log(`watching url: ${url}`)     
+console.log(`version: ${version} watching url: ${url}`)     
 
 var lastStatus;
 
@@ -49,10 +50,15 @@ poll(() => new Promise(() =>
         const pipelinerun =  JSON.parse(body)
 
         if (err) {
-            return console.error('fetch pipeline failed:', err);
+            console.error('fetch pipeline failed:', err);
         }
         
         const conditions = pipelinerun.status.conditions
+
+        if (typeof conditions === 'undefined') {
+            console.error('Failed to find condiftion:', body);
+        }
+
         const status = conditions[0].reason.toLowerCase()
         console.log(status);
         if (status != lastStatus) {
